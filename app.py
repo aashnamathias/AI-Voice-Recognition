@@ -18,6 +18,11 @@ import re
 
 st.title("🎙️ Voice Recognition")
 
+# Helper function to capitalize sentences
+def capitalize_sentences(text):
+    return re.sub(r'([.?!]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), text).capitalize()
+
+# Load models
 @st.cache_resource
 def load_model():
     processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
@@ -36,16 +41,29 @@ uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
 if uploaded_file is not None:
     st.audio(uploaded_file)
 
+    # Save the uploaded file to a temporary file
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         tmp.write(uploaded_file.read())
         tmp_path = tmp.name
 
-    speech_array, sampling_rate = torchaudio.load(tmp_path)
-    resampler = torchaudio.transforms.Resample(orig_freq=sampling_rate, new_freq=16000)
-    speech = resampler(speech_array).squeeze().numpy()
+    # Try to load the audio file with error handling
+    try:
+        speech_array, sampling_rate = torchaudio.load(tmp_path)
+    except Exception as e:
+        st.error(f"Error loading audio file: {e}")
+        st.stop()
 
+    # Conditional resampling
+    if sampling_rate != 16000:
+        resampler = torchaudio.transforms.Resample(orig_freq=sampling_rate, new_freq=16000)
+        speech = resampler(speech_array).squeeze().numpy()
+    else:
+        speech = speech_array.squeeze().numpy()
+
+    # Process the speech input
     inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True)
 
+    # Transcription
     with st.spinner("Transcribing... please wait ⏳"):
         with torch.no_grad():
             logits = model(**inputs).logits
@@ -56,12 +74,10 @@ if uploaded_file is not None:
     st.success(transcription)
     st.markdown(f"**🔢 Word Count:** {len(transcription.split())}")
 
+    # Punctuation restoration
     with st.spinner("Restoring punctuation... ✍️"):
         punctuated_text = punct_model.restore_punctuation(transcription)
-
-        # Capitalize the first word of each sentence
-        punctuated_text = re.sub(r'([.?!]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), punctuated_text)
-        punctuated_text = punctuated_text[0].upper() + punctuated_text[1:]
+        punctuated_text = capitalize_sentences(punctuated_text)
 
     st.markdown("### 📝 Transcription with Punctuation:")
     st.info(punctuated_text)
