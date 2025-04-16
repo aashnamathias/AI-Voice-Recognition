@@ -1,10 +1,5 @@
-transformers
-datasets
-torchaudio
-librosa
-jiwer
-fsspec==2025.3.2
-torch==2.4.0+cu118
-torchvision
-gradio
-deepmultilingualpunctuation
+streamlit==1.32.2
+transformers==4.40.1
+torch==2.2.2
+torchaudio==2.2.2
+deepmultilingualpunctuation==1.0.1
