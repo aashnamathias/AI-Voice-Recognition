@@ -3,3 +3,4 @@ transformers==4.40.1
 torch==2.2.2
 torchaudio==2.2.2
 deepmultilingualpunctuation==1.0.1
+
