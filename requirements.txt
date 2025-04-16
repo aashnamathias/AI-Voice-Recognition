@@ -1,0 +1,10 @@
+transformers
+datasets
+torchaudio
+librosa
+jiwer
+fsspec==2025.3.2
+torch==2.4.0+cu118
+torchvision
+gradio
+deepmultilingualpunctuation
