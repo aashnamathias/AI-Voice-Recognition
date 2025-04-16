@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1-q3bABvYx_c-UUyUN-Ep5BHoKysyeDhj
 """
 
-Commented out IPython magic to ensure Python compatibility.
+# Commented out IPython magic to ensure Python compatibility.
 %%writefile app.py
 import streamlit as st
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
