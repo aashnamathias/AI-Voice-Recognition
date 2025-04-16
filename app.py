@@ -8,7 +8,6 @@ Original file is located at
 """
 
 # Commented out IPython magic to ensure Python compatibility.
-%%writefile app.py
 import streamlit as st
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 from deepmultilingualpunctuation import PunctuationModel
