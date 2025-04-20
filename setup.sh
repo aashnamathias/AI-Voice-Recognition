@@ -1,4 +1,3 @@
-#this is setup.sh
 #!/bin/bash
 
 # 1. Upgrade pip first
