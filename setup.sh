@@ -7,8 +7,16 @@ pip install --upgrade pip
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 export PATH="$HOME/.cargo/bin:$PATH"
 
-# 3. Install PyTorch with CUDA support
+# 3. Verify Rust installation and PATH
+echo "Checking Rust version..."
+rustc --version
+echo "Current PATH:"
+echo "$PATH"
+
+# 4. Install PyTorch with CUDA support
+echo "Installing PyTorch..."
 pip install torch==2.2.1 torchaudio==2.2.1 --index-url https://download.pytorch.org/whl/cu118
 
-# 4. Install other requirements
+# 5. Install other requirements
+echo "Installing requirements..."
 pip install -r requirements.txt
