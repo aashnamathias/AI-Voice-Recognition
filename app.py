@@ -18,7 +18,26 @@ import re
 
 st.title("🎙️ Voice Recognition")
 
-# Load models with caching
+# Helper function to capitalize sentences
+def capitalize_sentences(text):
+    # Capitalize first letter of the entire text
+    text = text.strip().capitalize()
+    
+    # Split into sentences at periods (handling multiple spaces)
+    sentences = re.split(r'\.\s+', text)
+    
+    # Capitalize first letter of each sentence and rejoin with period+space
+    capitalized = []
+    for i, sentence in enumerate(sentences):
+        if sentence:  # Skip empty strings
+            if i > 0 and sentence[0].islower():
+                sentence = sentence[0].upper() + sentence[1:]
+            capitalized.append(sentence)
+    
+    # Rejoin with proper punctuation
+    return '. '.join(capitalized)
+
+# Load models
 @st.cache_resource
 def load_model():
     processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
@@ -29,39 +48,37 @@ def load_model():
 def load_punct_model():
     return PunctuationModel()
 
-# Load models
 processor, model = load_model()
 punct_model = load_punct_model()
 
-# File upload widget
 uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
 
-# Process the file if uploaded
 if uploaded_file is not None:
     st.audio(uploaded_file)
-    
+
+    # Save the uploaded file to a temporary file
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         tmp.write(uploaded_file.read())
         tmp_path = tmp.name
 
-    # Try to load and process the audio file
+    # Try to load the audio file with error handling
     try:
         speech_array, sampling_rate = torchaudio.load(tmp_path)
     except Exception as e:
-        st.error(f"Error loading audio: {e}")
+        st.error(f"Error loading audio file: {e}")
         st.stop()
 
-    # Resample the audio if necessary
+    # Conditional resampling
     if sampling_rate != 16000:
         resampler = torchaudio.transforms.Resample(orig_freq=sampling_rate, new_freq=16000)
         speech = resampler(speech_array).squeeze().numpy()
     else:
         speech = speech_array.squeeze().numpy()
 
-    # Prepare the input for the model
+    # Process the speech input
     inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True)
 
-    # Transcribe the audio
+    # Transcription
     with st.spinner("Transcribing... please wait ⏳"):
         with torch.no_grad():
             logits = model(**inputs).logits
@@ -75,13 +92,11 @@ if uploaded_file is not None:
     # Punctuation restoration
     with st.spinner("Restoring punctuation... ✍️"):
         punctuated_text = punct_model.restore_punctuation(transcription)
-        
-        # Capitalize the first word of each sentence
-        punctuated_text = capitalize_first_word(punctuated_text)
+        punctuated_text = capitalize_sentences(punctuated_text)
+
+        # Final cleanup for any edge cases
+        punctuated_text = re.sub(r'\s+([.!?])', r'\1', punctuated_text)  # Remove spaces before punctuation
+        punctuated_text = re.sub(r'([.!?])([a-zA-Z])', lambda m: m.group(1) + ' ' + m.group(2).upper(), punctuated_text)
 
     st.markdown("### 📝 Transcription with Punctuation:")
     st.info(punctuated_text)
-
-# Helper function to capitalize the first word of each sentence
-def capitalize_first_word(text):
-    return re.sub(r'([.?!]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), text).capitalize()
