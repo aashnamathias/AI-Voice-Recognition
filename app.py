@@ -9,7 +9,7 @@ Original file is located at
 
 # Commented out IPython magic to ensure Python compatibility.
 import streamlit as st
-from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
+from transformers import AutoProcessor
 from deepmultilingualpunctuation import PunctuationModel
 import torch
 import torchaudio
@@ -21,8 +21,8 @@ st.title("🎙️ Voice Recognition")
 # Load models with caching
 @st.cache_resource
 def load_model():
-    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
-    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+    processor = AutoProcessor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+    model = AutoProcessor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
     return processor, model
 
 @st.cache_resource
