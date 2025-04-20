@@ -1,5 +1,5 @@
 streamlit==1.32.2
-transformers==4.40.1
+transformers==4.28.1
 torch==2.2.2
 torchaudio==2.2.2
 deepmultilingualpunctuation==1.0.1
