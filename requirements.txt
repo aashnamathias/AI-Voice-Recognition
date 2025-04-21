@@ -4,7 +4,7 @@ torch==2.2.2
 torchaudio==2.2.2 
 tokenizers==0.13.2 
 deepmultilingualpunctuation==1.0.1
-tensorflow==2.18.0
+tensorflow==2.9.0
 langdetect==1.0.9
 packaging>=21.0
 pyyaml>=5.1
