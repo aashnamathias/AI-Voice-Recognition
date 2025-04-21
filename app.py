@@ -7,103 +7,83 @@ Original file is located at
     https://colab.research.google.com/drive/1-q3bABvYx_c-UUyUN-Ep5BHoKysyeDhj
 """
 
-# Commented out IPython magic to ensure Python compatibility.
 import streamlit as st
 from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
-from deepmultilingualpunctuation import PunctuationModel
 import torch
 import torchaudio
 import tempfile
 import re
+from rpunct import RestorePuncts
 
 st.title("🎙️ Voice Recognition")
 
 # Helper function to capitalize sentences
 def capitalize_sentences(text):
-    # Capitalize first letter of the entire text
     text = text.strip().capitalize()
-    
-    # Split into sentences at periods (handling multiple spaces)
     sentences = re.split(r'\.\s+', text)
-    
-    # Capitalize first letter of each sentence and rejoin with period+space
-    capitalized = []
-    for i, sentence in enumerate(sentences):
-        if sentence:  # Skip empty strings
-            if i > 0 and sentence[0].islower():
-                sentence = sentence[0].upper() + sentence[1:]
-            capitalized.append(sentence)
-    
-    # Rejoin with proper punctuation
-    return '. '.join(capitalized)
+    capitalized = ['. '.join(s.capitalize() if s else '' for s in sentences)]
+    return capitalized[0] if capitalized else ""
 
-# # Load models
-# @st.cache_resource
-# def load_model():
-#     processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
-#     model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
-#     return processor, model
-
+# Load Wav2Vec2 models
 @st.cache_resource
-def load_punct_model():
-    st.write("Inside load_punct_model function...")
+def load_asr_model():
+    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+    return processor, model
+
+# Load rpunct model
+@st.cache_resource
+def load_punctuation_model():
     try:
-        model = PunctuationModel()
-        st.write("PunctuationModel initialized successfully.")
-        return model
+        rpunct = RestorePuncts()
+        st.write("rpunct model loaded successfully.")
+        return rpunct
     except Exception as e:
-        st.error(f"⚠️ Error loading punctuation model: {e}")
-        return None  # Return None if loading fails
-        
-# processor, model = load_model()
-punct_model = load_punct_model()
+        st.error(f"⚠️ Error loading rpunct model: {e}")
+        return None
 
-# uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
+processor, model = load_asr_model()
+punctuation_model = load_punctuation_model()
 
-# if uploaded_file is not None:
-#     st.audio(uploaded_file)
+uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
 
-#     # Save the uploaded file to a temporary file
-#     with tempfile.NamedTemporaryFile(delete=False) as tmp:
-#         tmp.write(uploaded_file.read())
-#         tmp_path = tmp.name
+if uploaded_file is not None:
+    st.audio(uploaded_file)
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(uploaded_file.read())
+        tmp_path = tmp.name
+    try:
+        speech_array, sampling_rate = torchaudio.load(tmp_path)
+    except Exception as e:
+        st.error(f"Error loading audio file: {e}")
+        st.stop()
+    if sampling_rate != 16000:
+        resampler = torchaudio.transforms.Resample(orig_freq=sampling_rate, new_freq=16000)
+        speech = resampler(speech_array).squeeze().numpy()
+    else:
+        speech = speech_array.squeeze().numpy()
+    inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True)
+    with st.spinner("Transcribing... please wait ⏳"):
+        with torch.no_grad():
+            logits = model(**inputs).logits
+        predicted_ids = torch.argmax(logits, dim=-1)
+        transcription = processor.decode(predicted_ids[0])
 
-#     # Try to load the audio file with error handling
-#     try:
-#         speech_array, sampling_rate = torchaudio.load(tmp_path)
-#     except Exception as e:
-#         st.error(f"Error loading audio file: {e}")
-#         st.stop()
+    st.markdown("### ✏️ Raw Transcription:")
+    st.success(transcription)
+    st.markdown(f"**🔢 Word Count:** {len(transcription.split())}")
 
-#     # Conditional resampling
-#     if sampling_rate != 16000:
-#         resampler = torchaudio.transforms.Resample(orig_freq=sampling_rate, new_freq=16000)
-#         speech = resampler(speech_array).squeeze().numpy()
-#     else:
-#         speech = speech_array.squeeze().numpy()
-
-#     # Process the speech input
-#     inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True)
-
-#     # Transcription
-#     with st.spinner("Transcribing... please wait ⏳"):
-#         with torch.no_grad():
-#             logits = model(**inputs).logits
-#         predicted_ids = torch.argmax(logits, dim=-1)
-#         transcription = processor.decode(predicted_ids[0])
-
-#     st.markdown("### ✏️ Raw Transcription:")
-#     st.success(transcription)
-#     st.markdown(f"**🔢 Word Count:** {len(transcription.split())}")
-
-#     # Punctuation restoration
-#     with st.spinner("Restoring punctuation... ✍️"):
-#         punctuated_text = punct_model.restore_punctuation(transcription)
-#         punctuated_text = capitalize_sentences(punctuated_text)
-
-#         # Final cleanup for any edge cases
-#         punctuated_text = re.sub(r'\s+([.!?])', r'\1', punctuated_text)  # Remove spaces before punctuation
-#         punctuated_text = re.sub(r'([.!?])([a-zA-Z])', lambda m: m.group(1) + ' ' + m.group(2).upper(), punctuated_text)
-
-#     st.markdown("### 📝 Transcription with Punctuation:")
-#     st.info(punctuated_text)
+    # Punctuation restoration with rpunct
+    if punctuation_model is not None:
+        with st.spinner("Restoring punctuation... ✍️"):
+            try:
+                punctuated_text = punctuation_model.punctuate(transcription)
+                punctuated_text = capitalize_sentences(punctuated_text)
+                st.markdown("### 📝 Transcription with Punctuation:")
+                st.info(punctuated_text)
+            except Exception as e:
+                st.error(f"⚠️ Punctuation restoration with rpunct failed: {e}")
+                st.warning("Displaying raw transcription without punctuation.")
+    else:
+        st.warning("Punctuation model could not be loaded.")
+        st.warning("Displaying raw transcription without punctuation.")
