@@ -31,19 +31,19 @@ def load_asr_model():
     return processor, model
 
 # Load punctuation model (trying fullstop-punctuation-multilang-large)
-@st.cache_resource
-def load_punctuation_model():
-    try:
-        from deepmultilingualpunctuation import PunctuationModel
-        model = PunctuationModel(model="oliverguhr/fullstop-punctuation-multilang-large")
-        st.write("fullstop-punctuation-multilang-large model loaded successfully.")
-        return model
-    except Exception as e:
-        st.error(f"⚠️ Error loading punctuation model: {e}")
-        return None
+# @st.cache_resource
+# def load_punctuation_model():
+#     try:
+#         from deepmultilingualpunctuation import PunctuationModel
+#         model = PunctuationModel(model="oliverguhr/fullstop-punctuation-multilang-large")
+#         st.write("fullstop-punctuation-multilang-large model loaded successfully.")
+#         return model
+#     except Exception as e:
+#         st.error(f"⚠️ Error loading punctuation model: {e}")
+#         return None
 
 processor, model = load_asr_model()
-punct_model = load_punctuation_model()
+# punct_model = load_punctuation_model()
 
 uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
 
@@ -73,18 +73,18 @@ if uploaded_file is not None:
     st.success(transcription)
     st.markdown(f"**🔢 Word Count:** {len(transcription.split())}")
 
-    # Punctuation restoration
-    if punct_model is not None:
-        with st.spinner("Restoring punctuation... ✍️"):
-            try:
-                punctuated_text = punct_model.restore_punctuation(transcription)
-                punctuated_text = capitalize_sentences(punctuated_text)
-                st.markdown("### 📝 Transcription with Punctuation:")
-                st.info(punctuated_text)
-            except Exception as e:
-                st.error(f"⚠️ Punctuation restoration failed: {e}")
-                st.warning("Displaying raw transcription without punctuation.")
-    else:
-        st.warning("Punctuation model could not be loaded.")
-        st.warning("Displaying raw transcription without punctuation.")
+    # # Punctuation restoration
+    # if punct_model is not None:
+    #     with st.spinner("Restoring punctuation... ✍️"):
+    #         try:
+    #             punctuated_text = punct_model.restore_punctuation(transcription)
+    #             punctuated_text = capitalize_sentences(punctuated_text)
+    #             st.markdown("### 📝 Transcription with Punctuation:")
+    #             st.info(punctuated_text)
+    #         except Exception as e:
+    #             st.error(f"⚠️ Punctuation restoration failed: {e}")
+    #             st.warning("Displaying raw transcription without punctuation.")
+    # else:
+    #     st.warning("Punctuation model could not be loaded.")
+    #     st.warning("Displaying raw transcription without punctuation.")
         
