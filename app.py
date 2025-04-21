@@ -46,8 +46,12 @@ def capitalize_sentences(text):
 
 @st.cache_resource
 def load_punct_model():
-    return PunctuationModel()
-
+    try:
+        return PunctuationModel()
+    except Exception as e:
+        st.error(f"⚠️ Error loading punctuation model: {e}")
+        return None  # Return None if loading fails
+        
 # processor, model = load_model()
 punct_model = load_punct_model()
 
