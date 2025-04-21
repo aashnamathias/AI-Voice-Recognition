@@ -37,19 +37,19 @@ def capitalize_sentences(text):
     # Rejoin with proper punctuation
     return '. '.join(capitalized)
 
-# Load models
-@st.cache_resource
-def load_model():
-    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
-    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
-    return processor, model
-
+# # Load models
 # @st.cache_resource
-# def load_punct_model():
-#     return PunctuationModel()
+# def load_model():
+#     processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+#     model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+#     return processor, model
+
+@st.cache_resource
+def load_punct_model():
+    return PunctuationModel()
 
 # processor, model = load_model()
-# punct_model = load_punct_model()
+punct_model = load_punct_model()
 
 # uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
 
