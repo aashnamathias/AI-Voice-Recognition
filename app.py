@@ -9,94 +9,94 @@ Original file is located at
 
 # Commented out IPython magic to ensure Python compatibility.
 import streamlit as st
-# from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
-# from deepmultilingualpunctuation import PunctuationModel
-# import torch
-# import torchaudio
-# import tempfile
-# import re
+from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
+from deepmultilingualpunctuation import PunctuationModel
+import torch
+import torchaudio
+import tempfile
+import re
 
 st.title("🎙️ Voice Recognition")
 
-# # Helper function to capitalize sentences
-# def capitalize_sentences(text):
-#     # Capitalize first letter of the entire text
-#     text = text.strip().capitalize()
+# Helper function to capitalize sentences
+def capitalize_sentences(text):
+    # Capitalize first letter of the entire text
+    text = text.strip().capitalize()
     
-#     # Split into sentences at periods (handling multiple spaces)
-#     sentences = re.split(r'\.\s+', text)
+    # Split into sentences at periods (handling multiple spaces)
+    sentences = re.split(r'\.\s+', text)
     
-#     # Capitalize first letter of each sentence and rejoin with period+space
-#     capitalized = []
-#     for i, sentence in enumerate(sentences):
-#         if sentence:  # Skip empty strings
-#             if i > 0 and sentence[0].islower():
-#                 sentence = sentence[0].upper() + sentence[1:]
-#             capitalized.append(sentence)
+    # Capitalize first letter of each sentence and rejoin with period+space
+    capitalized = []
+    for i, sentence in enumerate(sentences):
+        if sentence:  # Skip empty strings
+            if i > 0 and sentence[0].islower():
+                sentence = sentence[0].upper() + sentence[1:]
+            capitalized.append(sentence)
     
-#     # Rejoin with proper punctuation
-#     return '. '.join(capitalized)
+    # Rejoin with proper punctuation
+    return '. '.join(capitalized)
 
-# # Load models
-# @st.cache_resource
-# def load_model():
-#     processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
-#     model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
-#     return processor, model
+# Load models
+@st.cache_resource
+def load_model():
+    processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+    model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-large-960h-lv60-self")
+    return processor, model
 
-# @st.cache_resource
-# def load_punct_model():
-#     return PunctuationModel()
+@st.cache_resource
+def load_punct_model():
+    return PunctuationModel()
 
-# processor, model = load_model()
-# punct_model = load_punct_model()
+processor, model = load_model()
+punct_model = load_punct_model()
 
-# uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
+uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
 
-# if uploaded_file is not None:
-#     st.audio(uploaded_file)
+if uploaded_file is not None:
+    st.audio(uploaded_file)
 
-#     # Save the uploaded file to a temporary file
-#     with tempfile.NamedTemporaryFile(delete=False) as tmp:
-#         tmp.write(uploaded_file.read())
-#         tmp_path = tmp.name
+    # Save the uploaded file to a temporary file
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        tmp.write(uploaded_file.read())
+        tmp_path = tmp.name
 
-#     # Try to load the audio file with error handling
-#     try:
-#         speech_array, sampling_rate = torchaudio.load(tmp_path)
-#     except Exception as e:
-#         st.error(f"Error loading audio file: {e}")
-#         st.stop()
+    # Try to load the audio file with error handling
+    try:
+        speech_array, sampling_rate = torchaudio.load(tmp_path)
+    except Exception as e:
+        st.error(f"Error loading audio file: {e}")
+        st.stop()
 
-#     # Conditional resampling
-#     if sampling_rate != 16000:
-#         resampler = torchaudio.transforms.Resample(orig_freq=sampling_rate, new_freq=16000)
-#         speech = resampler(speech_array).squeeze().numpy()
-#     else:
-#         speech = speech_array.squeeze().numpy()
+    # Conditional resampling
+    if sampling_rate != 16000:
+        resampler = torchaudio.transforms.Resample(orig_freq=sampling_rate, new_freq=16000)
+        speech = resampler(speech_array).squeeze().numpy()
+    else:
+        speech = speech_array.squeeze().numpy()
 
-#     # Process the speech input
-#     inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True)
+    # Process the speech input
+    inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True)
 
-#     # Transcription
-#     with st.spinner("Transcribing... please wait ⏳"):
-#         with torch.no_grad():
-#             logits = model(**inputs).logits
-#         predicted_ids = torch.argmax(logits, dim=-1)
-#         transcription = processor.decode(predicted_ids[0])
+    # Transcription
+    with st.spinner("Transcribing... please wait ⏳"):
+        with torch.no_grad():
+            logits = model(**inputs).logits
+        predicted_ids = torch.argmax(logits, dim=-1)
+        transcription = processor.decode(predicted_ids[0])
 
-#     st.markdown("### ✏️ Raw Transcription:")
-#     st.success(transcription)
-#     st.markdown(f"**🔢 Word Count:** {len(transcription.split())}")
+    st.markdown("### ✏️ Raw Transcription:")
+    st.success(transcription)
+    st.markdown(f"**🔢 Word Count:** {len(transcription.split())}")
 
-#     # Punctuation restoration
-#     with st.spinner("Restoring punctuation... ✍️"):
-#         punctuated_text = punct_model.restore_punctuation(transcription)
-#         punctuated_text = capitalize_sentences(punctuated_text)
+    # Punctuation restoration
+    with st.spinner("Restoring punctuation... ✍️"):
+        punctuated_text = punct_model.restore_punctuation(transcription)
+        punctuated_text = capitalize_sentences(punctuated_text)
 
-#         # Final cleanup for any edge cases
-#         punctuated_text = re.sub(r'\s+([.!?])', r'\1', punctuated_text)  # Remove spaces before punctuation
-#         punctuated_text = re.sub(r'([.!?])([a-zA-Z])', lambda m: m.group(1) + ' ' + m.group(2).upper(), punctuated_text)
+        # Final cleanup for any edge cases
+        punctuated_text = re.sub(r'\s+([.!?])', r'\1', punctuated_text)  # Remove spaces before punctuation
+        punctuated_text = re.sub(r'([.!?])([a-zA-Z])', lambda m: m.group(1) + ' ' + m.group(2).upper(), punctuated_text)
 
-#     st.markdown("### 📝 Transcription with Punctuation:")
-#     st.info(punctuated_text)
+    st.markdown("### 📝 Transcription with Punctuation:")
+    st.info(punctuated_text)
