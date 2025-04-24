@@ -31,6 +31,15 @@ def segment_and_punctuate(text, max_words=15):
         segments.append(" ".join(current_segment) + ".")
     return " ".join(segments)
 
+def capitalize_first_letter(punctuated_text):
+    segments = punctuated_text.split(".")
+    capitalized_segments = []
+    for segment in segments:
+        stripped_segment = segment.strip()
+        if stripped_segment:
+            capitalized_segments.append(stripped_segment[0].upper() + stripped_segment[1:])
+    return ". ".join(capitalized_segments).strip() + "." if capitalized_segments else ""
+
 # Load Wav2Vec2 models
 @st.cache_resource
 def load_asr_model():
@@ -80,5 +89,6 @@ if uploaded_file is not None:
     # Basic Punctuation
     with st.spinner("Adding basic punctuation... ✍️"):
         punctuated_text = segment_and_punctuate(transcription)
+        capitalized_text = capitalize_first_letter(punctuated_text)
         st.markdown("### 📝 Transcription with Basic Punctuation:")
-        st.info(punctuated_text)
+        st.info(capitalized_text)
