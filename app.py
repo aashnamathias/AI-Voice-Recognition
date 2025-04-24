@@ -38,7 +38,9 @@ def capitalize_first_letter(punctuated_text):
         stripped_segment = segment.strip()
         if stripped_segment:
             capitalized_segments.append(stripped_segment[0].upper() + stripped_segment[1:])
-    return ". ".join(capitalized_segments).strip() + "." if capitalized_segments else ""
+        else:
+            capitalized_segments.append("")  # Keep empty segments
+    return ". ".join(capitalized_segments).strip()
 
 # Load Wav2Vec2 models
 @st.cache_resource
