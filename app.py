@@ -17,19 +17,29 @@ import numpy as np
 
 st.title("🎙️ Voice Recognition")
 
-# Basic sentence segmentation (adjust max_words as needed)
-def segment_and_punctuate(text, max_words=15):
-    words = text.split()
-    segments = []
-    current_segment = []
-    for word in words:
-        current_segment.append(word)
-        if len(current_segment) >= max_words:
-            segments.append(" ".join(current_segment) + ".")
-            current_segment = []
-    if current_segment:
-        segments.append(" ".join(current_segment) + ".")
-    return " ".join(segments)
+# # Basic sentence segmentation (adjust max_words as needed)
+# def segment_and_punctuate(text, max_words=15):
+#     words = text.split()
+#     segments = []
+#     current_segment = []
+#     for word in words:
+#         current_segment.append(word)
+#         if len(current_segment) >= max_words:
+#             segments.append(" ".join(current_segment) + ".")
+#             current_segment = []
+#     if current_segment:
+#         segments.append(" ".join(current_segment) + ".")
+#     return " ".join(segments)
+
+import re
+def better_segment_and_capitalize(text):
+    sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|!)\s', text)
+    capitalized_sentences = []
+    for sentence in sentences:
+        stripped_sentence = sentence.strip()
+        if stripped_sentence:
+            capitalized_sentences.append(stripped_sentence[0].upper() + stripped_sentence[1:])
+    return ". ".join(capitalized_sentences).strip()
 
 def capitalize_first_letter(punctuated_text):
     segments = punctuated_text.split(".")
@@ -92,7 +102,8 @@ if uploaded_file is not None:
 
     # Basic Punctuation
     with st.spinner("Adding basic punctuation... ✍️"):
-        punctuated_text = segment_and_punctuate(transcription)
+        # punctuated_text = segment_and_punctuate(transcription)
+        punctuated_text = better_segment_and_capitalize(transcription)
         capitalized_text = capitalize_first_letter(punctuated_text)
         st.markdown("### 📝 Transcription with Basic Punctuation:")
         st.info(capitalized_text)
