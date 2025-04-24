@@ -17,52 +17,52 @@ import numpy as np
 
 st.title("🎙️ Voice Recognition")
 
-# # Basic sentence segmentation (adjust max_words as needed)
-# def segment_and_punctuate(text, max_words=15):
-#     words = text.split()
-#     segments = []
-#     current_segment = []
-#     for word in words:
-#         current_segment.append(word)
-#         if len(current_segment) >= max_words:
-#             segments.append(" ".join(current_segment) + ".")
-#             current_segment = []
-#     if current_segment:
-#         segments.append(" ".join(current_segment) + ".")
-#     return " ".join(segments)
-
-def segment_and_capitalize(text, min_words=10, max_words=20):
+# Basic sentence segmentation (adjust max_words as needed)
+def segment_and_punctuate(text, max_words=15):
     words = text.split()
     segments = []
     current_segment = []
-    word_count = 0
     for word in words:
         current_segment.append(word)
-        word_count += 1
-        if word_count >= max_words:
-            segment = " ".join(current_segment)
-            if segment:
-                segments.append(segment[0].upper() + segment[1:] + ".")
+        if len(current_segment) >= max_words:
+            segments.append(" ".join(current_segment) + ".")
             current_segment = []
-            word_count = 0
     if current_segment:
-        segment = " ".join(current_segment)
-        if segment:
-            segments.append(segment[0].upper() + segment[1:] + ".")
+        segments.append(" ".join(current_segment) + ".")
     return " ".join(segments)
 
-# def capitalize_first_letter(punctuated_text):
-#     segments = punctuated_text.split(".")
-#     capitalized_segments = []
-#     for segment in segments:
-#         stripped_segment = segment.strip()
-#         if stripped_segment:
-#             first_word = stripped_segment.split()[0]
-#             rest_of_segment = " ".join(stripped_segment.split()[1:])
-#             capitalized_segments.append(first_word[0].upper() + first_word[1:].lower() + (" " + rest_of_segment.lower() if rest_of_segment else ""))
-#         else:
-#             capitalized_segments.append("")
-#     return ". ".join(capitalized_segments).strip() + "." if capitalized_segments else ""
+# def segment_and_capitalize(text, min_words=10, max_words=20):
+#     words = text.split()
+#     segments = []
+#     current_segment = []
+#     word_count = 0
+#     for word in words:
+#         current_segment.append(word)
+#         word_count += 1
+#         if word_count >= max_words:
+#             segment = " ".join(current_segment)
+#             if segment:
+#                 segments.append(segment[0].upper() + segment[1:] + ".")
+#             current_segment = []
+#             word_count = 0
+#     if current_segment:
+#         segment = " ".join(current_segment)
+#         if segment:
+#             segments.append(segment[0].upper() + segment[1:] + ".")
+#     return " ".join(segments)
+
+def capitalize_first_letter(punctuated_text):
+    segments = punctuated_text.split(".")
+    capitalized_segments = []
+    for segment in segments:
+        stripped_segment = segment.strip()
+        if stripped_segment:
+            first_word = stripped_segment.split()[0]
+            rest_of_segment = " ".join(stripped_segment.split()[1:])
+            capitalized_segments.append(first_word[0].upper() + first_word[1:].lower() + (" " + rest_of_segment.lower() if rest_of_segment else ""))
+        else:
+            capitalized_segments.append("")
+    return ". ".join(capitalized_segments).strip() + "." if capitalized_segments else ""
 
 # Load Wav2Vec2 models
 @st.cache_resource
@@ -112,8 +112,8 @@ if uploaded_file is not None:
 
     # Basic Punctuation
     with st.spinner("Adding basic punctuation... ✍️"):
-        # punctuated_text = segment_and_punctuate(transcription)
-        punctuated_text = segment_and_capitalize(transcription)
-        # capitalized_text = capitalize_first_letter(punctuated_text)
+        punctuated_text = segment_and_punctuate(transcription)
+        # punctuated_text = segment_and_capitalize(transcription)
+        capitalized_text = capitalize_first_letter(punctuated_text)
         st.markdown("### 📝 Transcription with Basic Punctuation:")
-        st.info(punctuated_text)
+        st.info(capitalized_text)
