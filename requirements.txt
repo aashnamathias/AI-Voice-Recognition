@@ -1,12 +1,6 @@
 streamlit==1.32.2
 transformers==4.28.1
 torch==2.2.2
-torchaudio==2.2.2 
-tokenizers==0.13.2 
-deepmultilingualpunctuation==1.0.1
-tensorflow==2.12.0
-langdetect==1.0.9
-packaging>=21.0
-pyyaml>=5.1
-libsox-fmt-wav 
-sox  
+torchaudio==2.2.2
+soundfile
+numpy
