@@ -1,5 +1,5 @@
 streamlit==1.32.2
-transformers==4.28.1
+transformers==4.27.0
 torch==2.2.2
 torchaudio==2.2.2
 soundfile
