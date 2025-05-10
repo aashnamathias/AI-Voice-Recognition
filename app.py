@@ -14,6 +14,7 @@ import torchaudio
 import tempfile
 import soundfile as sf
 import numpy as np
+import noisereduce as nr 
 
 st.title("🎙️ Voice Recognition")
 
@@ -85,6 +86,10 @@ if uploaded_file is not None:
         speech_array = audio.astype("float32")
         if len(speech_array.shape) > 1:
             speech_array = speech_array.mean(axis=1)
+
+        reduced_noise = nr.reduce_noise(y=speech_array, sr=sampling_rate)
+        speech_array = reduced_noise
+        
     except Exception as e:
         st.error(f"Error loading audio file: {e}")
         st.stop()
